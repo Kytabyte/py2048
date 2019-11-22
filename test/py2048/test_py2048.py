@@ -43,7 +43,7 @@ def test_basic():
         2, 0, 0, 0,
         2, 0, 2, 4
     ]
-    game._empty = {0, 1, 2, 3, 5, 7, 8, 12, 14, 15}
+    game._empty = {4, 6, 9, 10, 11, 13}
     game._score = 0
     game.moveleft()
     board = game._board
@@ -61,7 +61,7 @@ def test_basic():
         2, 0, 0, 0,
         4, 4, 0, 0
     ]
-    game._empty = {0, 1, 4, 5, 8, 12, 13}
+    game._empty = {2, 3, 6, 7, 9, 10, 11, 14, 15}
     game._score = 0
     game.moveup()
     board = game._board
@@ -79,7 +79,7 @@ def test_basic():
         4, 0, 0, 0,
         0, 0, 0, 0
     ]
-    game._empty = {0, 1, 4, 5, 8}
+    game._empty = {2, 3, 6, 7, 9, 10, 11, 12, 13, 14, 15}
     game._score = 0
     game.movedown()
     board = game._board
@@ -97,7 +97,7 @@ def test_basic():
         4, 0, 0, 0,
         8, 16, 0, 0
     ]
-    game._empty = {8, 12, 13}
+    game._empty = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 14, 15}
     game._score = 0
     game.moveright()
     board = game._board

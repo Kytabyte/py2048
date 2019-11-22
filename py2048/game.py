@@ -68,15 +68,17 @@ class Game:
         if self.isover:
             raise Exception("Game is Over. Call `reset` to start a new game.")
 
-        move_any = False
+        has_move = False
         # We have the traverse order along the direction, see `_geniter`
         for strip in self._iter[direction]:
-            move_any = self._combine(strip) or move_any
-        if move_any:
-            self._update_empty()
+            has_move_strip = self._combine(strip)
+            if has_move_strip:
+                self._update_empty(strip)
+            has_move = has_move or has_move_strip
+        if has_move:
             self._fill()
 
-        return move_any
+        return has_move
 
     def _geniter(self):
         # Since the combine strategy is the same for all directions of move,
@@ -164,8 +166,8 @@ class Game:
 
         return move_any
 
-    def _update_empty(self):
-        for i in range(self._ntiles):
+    def _update_empty(self, strip):
+        for i in strip:
             if self._board[i] == 0:
                 self._empty.add(i)
             elif i in self._empty:
