@@ -69,8 +69,8 @@ class Game:
             raise Exception("Game is Over. Call `reset` to start a new game.")
 
         move_any = False
+        # We have the traverse order along the direction, see `_geniter`
         for strip in self._iter[direction]:
-            move_any = self._move_zeros(strip) or move_any
             move_any = self._combine(strip) or move_any
         if move_any:
             self._update_empty()
@@ -104,42 +104,63 @@ class Game:
 
         return _iter
 
-    def _move_zeros(self, strip):
-        move_any = False
-        board = self._board
-
-        zero = cur = 0
-        while cur < len(strip):
-            if board[strip[zero]] == 0 and board[strip[cur]] != 0:
-                move_any = True
-                board[strip[zero]], board[strip[cur]] = board[strip[cur]], board[strip[zero]]
-            if board[strip[zero]] != 0:
-                zero += 1
-            cur += 1
-
-        return move_any
-
     def _combine(self, strip):
+        # combine the same tile of two zero-omitted-neighbour along the strip index
+        # with move-zeros-to-end on the fly!
+        # Example:
+        # board = [
+        #   0, 2, 2, 4,
+        #   ...
+        # ]
+        # strip = [0, 1, 2, 3]
+        # means that we want to combine [0, 2, 2, 4]  into [4, 4, 0, 0]
+        # Three steps in general to solve this problem:
+        # 1. move zeros to right
+        # 2. combine neighbours in left-to-right order
+        # 3. move zeros to right
+        #
+        # We combine these three steps on the fly.
+        #
+        # The following algorithm has the following invariants:
+        # 1. zero <= start < end at the start of each while loop (may not true during loop)
+        # 2. when zero != start, board[strip[zero]] == 0 and strip[zero] is the first zero in the strip
+        # The above two invariants equals the ones of move-zeros-to-end
+        # 3. At all time when comparing board[strip[start]] and board[strip[end]], they are
+        #    contiguous except there may be 0s between them.
+        # Thus we can compare and combine them.
+
         move_any = False
 
         board = self._board
+        start, zero, end = 0, 0, 1
 
-        cur, zero = 0, 0
-        while cur < len(strip):
-            if board[strip[cur]] == 0:
-                cur += 1
+        while start < len(strip):
+            if board[strip[start]] == 0:
+                start, end = start + 1, end + 1
                 continue
-            if cur + 1 < len(strip) and board[strip[cur]] == board[strip[cur + 1]]:
+
+            # move zeros to the right
+            if zero != start:
                 move_any = True
-                board[strip[cur]] <<= 1
-                self._score += board[strip[cur]]
-                board[strip[cur + 1]] = 0
-            if zero != cur:
-                board[strip[zero]] = board[strip[cur]]
-                board[strip[cur]] = 0
+                board[strip[zero]] = board[strip[start]]
+                board[strip[start]] = 0
+                start = zero
             if board[strip[zero]] != 0:
                 zero += 1
-            cur += 1
+
+            # find zero-omitted neighbour of index strip[start]
+            while end < len(strip) and board[strip[end]] == 0:
+                end += 1
+
+            # at this time both strip[start] and strip[end] are not 0 if strip[end] exists
+            if end < len(strip) and board[strip[start]] == board[strip[end]]:
+                move_any = True
+                board[strip[start]] <<= 1
+                self._addscore(board[strip[start]])
+                board[strip[end]] = 0
+            # compare the next pair
+            start = end
+            end = start + 1
 
         return move_any
 
